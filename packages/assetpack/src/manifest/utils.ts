@@ -20,3 +20,27 @@ export function getManifestName(path: string, entry: string): string | null {
 
     return targetPath;
 }
+
+export function naturalSort(a: string, b: string): number {
+    const regex = /(\d+|\D+)/g; // Match numbers and non-numbers
+    const aParts = a.match(regex) ?? '';
+    const bParts = b.match(regex) ?? '';
+
+    for (let i = 0; i < Math.min(aParts.length, bParts.length); i++) {
+        const aPart = aParts[i];
+        const bPart = bParts[i];
+
+        const aNum = Number(aPart);
+        const bNum = Number(bPart);
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            return aNum - bNum;
+        } else {
+            const comparison = aPart.localeCompare(bPart);
+            if (comparison !== 0) {
+                return comparison;
+            }
+        }
+    }
+
+    return aParts.length - bParts.length;
+}

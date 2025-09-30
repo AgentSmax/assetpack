@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import { BuildReporter, path, stripTags } from '../core/index.js';
 
 import type { Asset, AssetPipe, PipeSystem, PluginOptions } from '../core/index.js';
+import { naturalSort } from './utils.js';
 
 export interface PixiBundle {
     name: string;
@@ -44,6 +45,12 @@ export interface PixiManifestOptions extends PluginOptions {
      * When set to relative, asset bundles will use their relative paths as names.
      */
     nameStyle?: 'short' | 'relative';
+    /**
+     * The output sorting method for the src array in the manifest file.
+     * - default: sorts the src array using default string sorting (lexicographical order).
+     * - natural: sorts the src array using natural sorting (e.g., "file2" comes before "file10").
+     */
+    srcSortMethod?: 'default' | 'natural';
     /**
      * if true, the all tags will be outputted in the data.tags field of the manifest.
      * If false, only internal tags will be outputted to the data.tags field. All other tags will be outputted to the data field directly.
@@ -218,6 +225,7 @@ function collectAssets(
 
     if (asset.transformChildren.length > 0) {
         const finalManifestAssets = finalAssets.filter((finalAsset) => !finalAsset.inheritedMetaData[tags!.mIgnore!]);
+        const isSortStyleNatural = options.srcSortMethod === 'natural';
 
         if (finalManifestAssets.length === 0) return;
 
@@ -234,7 +242,7 @@ function collectAssets(
             alias: getShortNames(stripTags(path.relative(entryPath, asset.path)), options),
             src: finalManifestAssets
                 .map((finalAsset) => path.relative(outputPath, finalAsset.path))
-                .sort((a, b) => b.localeCompare(a)),
+                .sort((a, b) => isSortStyleNatural ? naturalSort(a, b) : b.localeCompare(a)),
             data: options.includeMetaData ? metadata : undefined,
         });
     }
